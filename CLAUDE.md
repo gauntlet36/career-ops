@@ -264,6 +264,8 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Batch processes offers | `batch` |
 | Asks about rejection patterns or wants to improve targeting | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
+| Wants a skill-gap analysis or learning plan | `upskill` |
+| Wants to enrich profile from documents/GitHub/LinkedIn | `expand` |
 
 ### CV Source of Truth
 

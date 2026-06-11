@@ -18,17 +18,18 @@ import { resolve, basename, dirname, join } from 'path';
 import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
 
+// Always-present sections. Projects is intentionally NOT required — it is an
+// optional section the renderer omits entirely when a candidate (e.g. a senior
+// hire) has no projects to list. The Professional Summary is likewise optional.
 const REQUIRED_SECTIONS = [
   '\\\\section{Education}',
   '\\\\section{Work Experience}',
-  '\\\\section{Personal Projects}',
   '\\\\section{Technical Skills}',
 ];
 
 const REQUIRED_COMMANDS = [
   '\\\\resumeSubheading',
   '\\\\resumeItem',
-  '\\\\resumeProjectHeading',
 ];
 
 async function main() {
@@ -210,9 +211,18 @@ async function main() {
       }
 
       const pdfStat = await stat(targetPdf);
+      // Approximate page count from the PDF structure (same heuristic as generate-pdf.mjs).
+      // Lets the latex-mode verification loop check the 2-page constraint without opening the PDF.
+      let pages = null;
+      try {
+        const pdfBuf = await readFile(targetPdf);
+        const pdfString = pdfBuf.toString('latin1');
+        pages = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length || null;
+      } catch { /* page count is best-effort */ }
       report.pdf = {
         path: targetPdf,
         sizeKB: parseFloat((pdfStat.size / 1024).toFixed(1)),
+        pages,
       };
     } catch (err) {
       report.postCompileError = `Failed to finalize PDF: ${err.message}`;

@@ -14,13 +14,19 @@ import (
 // 2026-06-04"). These regexes lift that structure back out so the dashboard can
 // show Location / Pay / Last-contact columns without a tracker schema change.
 var (
-	// $-amounts, optionally a range: "$140-210K", "$174,986-209,983", "~$124.2-198.7K"
-	reMoneySpan = regexp.MustCompile(`~?\$\d[\d,]*(?:\.\d+)?[KkMm]?(?:\s*[-–]\s*\$?\d[\d,]*(?:\.\d+)?[KkMm]?)?`)
+	// Currency amounts ($, £ or €), optionally a range: "$140-210K",
+	// "$174,986-209,983", "~$124.2-198.7K", "£103.9-124.5K", "€90-120K"
+	reMoneySpan = regexp.MustCompile(`~?[$£€]\d[\d,]*(?:\.\d+)?[KkMm]?(?:\s*[-–]\s*[$£€]?\d[\d,]*(?:\.\d+)?[KkMm]?)?`)
 	// ISO dates embedded in notes ("Rejected 2026-06-04", "viewed 2026-06-04")
 	reISODate = regexp.MustCompile(`\b20\d{2}-\d{2}-\d{2}\b`)
 	// "City ST" / "City, ST" with a strict two-letter US state code so prose like
 	// "Sams AI" or "Kerin Colby DONE" can't false-positive.
 	reCityState = regexp.MustCompile(`\b([A-Z][A-Za-z.'-]+(?: [A-Z][A-Za-z.'-]+){0,2}),? (A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b`)
+	// International "City, Country/Region" for non-US roles ("London, UK",
+	// "Berlin, Germany", "Dublin, Ireland"). A curated country/region tail keeps
+	// prose from false-matching the way a bare 2-letter code would. Applied to
+	// notes only (not the role title), since titles often end in ", EMEA".
+	reCityCountry = regexp.MustCompile(`\b([A-Z][A-Za-z.'-]+(?: [A-Z][A-Za-z.'-]+){0,2}), (UK|United Kingdom|England|Scotland|Wales|Ireland|EMEA|EU|Europe|Germany|France|Spain|Italy|Netherlands|Belgium|Switzerland|Sweden|Denmark|Norway|Finland|Poland|Portugal|Austria|Canada|Australia|India|Singapore|Japan|Brazil|Mexico|UAE|Israel)\b`)
 	// Individual amounts inside an already-matched span: "140", "210K", "209,983"
 	reMoneyPart = regexp.MustCompile(`(\d[\d,]*(?:\.\d+)?)\s*([KkMm]?)`)
 	// Estimate markers: "(est)", "(est;", "market est)" or "market" as its own
@@ -55,12 +61,21 @@ func payCeiling(span string) float64 {
 func deriveNoteFields(app *model.CareerApplication) {
 	lower := strings.ToLower(app.Role + " " + app.Notes)
 
-	// Location: first "City, ST" in the notes, falling back to the role title
-	// (some tracker rows carry the city there, e.g. "... — Charlotte, NC").
-	if m := reCityState.FindStringSubmatch(app.Notes); m != nil {
+	// Location: first US "City, ST" in the notes, then an international
+	// "City, Country" ("London, UK"), falling back to the role title for the US
+	// form only — the role title often ends in a region like ", EMEA" that would
+	// false-match the looser international pattern.
+	switch {
+	case reCityState.FindStringSubmatch(app.Notes) != nil:
+		m := reCityState.FindStringSubmatch(app.Notes)
 		app.Location = m[1] + ", " + m[2]
-	} else if m := reCityState.FindStringSubmatch(app.Role); m != nil {
+	case reCityCountry.FindStringSubmatch(app.Notes) != nil:
+		m := reCityCountry.FindStringSubmatch(app.Notes)
 		app.Location = m[1] + ", " + m[2]
+	default:
+		if m := reCityState.FindStringSubmatch(app.Role); m != nil {
+			app.Location = m[1] + ", " + m[2]
+		}
 	}
 
 	// Work mode: hybrid beats remote ("Remote/hybrid" means office days exist);

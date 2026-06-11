@@ -113,6 +113,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
 8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
 9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
+9b. **Tracker note convention** -- write the Notes field (9th TSV column) as `{Location} ({WorkMode}). {pay} ({POSTED|est}). {summary}` so the dashboard can populate its Location / Pay / Last-contact columns. Location is `City, ST` (US) or `City, Country` (e.g. `London, UK`); pay uses the JD's own currency symbol (`$`/`£`/`€`), e.g. `£104-125K (POSTED)`. See `modes/oferta.md` for the full spec and example.
 10. **Include `**URL:**` in every report header.**
 
 ### Tools
@@ -237,3 +238,65 @@ These rules apply to ALL generated text that ends up in candidate-facing documen
 - "Cut p95 latency from 2.1s to 380ms" beats "improved performance"
 - "Postgres + pgvector for retrieval over 12k docs" beats "designed scalable RAG architecture"
 - Name tools, projects, and customers when allowed
+
+### Interview backtrack test (reframing honesty)
+
+Some reframing of experience toward the target role is expected and fine. The line is the **interview backtrack test**: could the candidate explain this bullet in an interview without backtracking? If they'd have to say "well, what I actually meant was…", it's gone too far. Apply this three-tier check to every reframed claim in CVs, cover letters, and form answers:
+
+- **OK (do it freely):** Reordering experience to lead with what's most relevant; using natural synonyms for the target domain; emphasizing one aspect of a broad role.
+- **Flag it (surface to the user):** Combining academic + industry experience into a single claim that implies it was all industry; describing work using the posting's exact terminology when the actual work was adjacent but not the same; labeling a skill the candidate is still learning as if it were established.
+- **Never:** Claiming experience the candidate doesn't have; implying they worked in a domain they haven't.
+
+When a bullet falls in the **"flag it"** zone, do not decide silently. After drafting, present it to the user:
+> "This bullet is a stretch because {reason}. Keep, soften, or drop?"
+
+### Reviewer Pass (drafter-reviewer separation)
+
+Before finalizing any candidate-facing document (CV PDF, LaTeX CV, cover letter), run one independent critique pass. The drafter (you) just wrote the document, so you are the worst judge of it — a fresh reviewer with no attachment to the draft catches weak bullets, unsupported claims, missed keywords, and tone drift that the drafter cannot see.
+
+**When to run:** After the draft exists on disk / in the payload, before presenting it to the user as final. Run exactly once per document. Skip only if the user explicitly says "skip the review."
+
+**How to run:**
+
+Spawn a `general-purpose` Agent with a **fresh context**. Pass the draft **inline in the prompt** — do not make the reviewer re-Read files you already have. Inject: the draft text, the JD text, and the relevant rules. Use this prompt skeleton:
+
+```
+You are a hiring-manager proxy reviewing a job application document. Make it as targeted and defensible as possible. You did not write it, so be critical.
+
+## Reference (inline — do not Read these from disk)
+- Candidate CV facts: {paste relevant cv.md / article-digest.md bullets}
+- Writing rules: no em dashes, no buzzwords, active voice, concrete claims only, interview backtrack test (flag any claim the candidate couldn't defend in an interview without backtracking).
+
+## Draft to review
+{paste the full draft inline}
+
+## Job posting
+{paste the JD inline}
+
+## Produce feedback in two parts:
+
+**Part A — Structured edits (JSON array).** Only when you can quote the exact current text:
+[{ "old_string": "<exact text from draft>", "new_string": "<replacement>", "reason": "<keyword match | company angle | reframing | style>" }]
+Make each old_string unique (include surrounding context).
+
+**Part B — Narrative critique (grouped by category, produce every category even if "no issues"):**
+- Missed keywords/requirements — what to add and roughly where
+- Company/department-specific angles — connections to the company's actual priorities (research via WebSearch if useful)
+- Action-oriented reframing — passive/generic/low-energy statements to rewrite
+- Tone & honesty — cliches, hedging, over-claims; flag any bullet that fails the interview backtrack test
+
+CRITICAL: All suggestions must be grounded in the candidate's actual experience. NEVER suggest fabricating skills, experience, or achievements. If a requirement is a genuine gap, say so and suggest how to frame adjacent experience instead. Do not run a verification checklist — focus on content critique.
+```
+
+**How to apply the feedback:**
+1. **Part A (structured edits):** apply directly with Edit (or merge into the JSON payload for latex/cover). Skip any edit whose rationale would require fabricating content.
+2. **Part B (narrative):** apply with judgment. Verify every company-specific claim via WebFetch/WebSearch before including it — never trust reviewer research at face value.
+3. **Honesty gate:** any reviewer suggestion that introduces a claim failing the interview backtrack test is surfaced to the user ("keep, soften, or drop?"), never applied silently.
+4. After applying, the document on disk/payload is the revised draft. Briefly tell the user the 2-3 most impactful changes the review produced.
+
+### Low-match reframing warning
+
+Before generating a tailored CV or cover letter, check the evaluation's **Match with CV** result. If the match is weak (Block B shows mostly gaps, or the global score is below 3.5), warn the user before drafting:
+> "This role is a significant stretch — making the CV fit would require extensive reframing, some of it in the 'flag it' zone. Want me to proceed, or focus on closing the gap first?"
+
+This protects the candidate from sending applications they can't defend in an interview, and respects the ethical-use principle of quality over quantity.

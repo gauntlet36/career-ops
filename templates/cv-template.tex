@@ -85,19 +85,12 @@
         % SUBHEADING
         \\ {{CONTACT_LINE}}\\
         \small
-        % EMAIL
-        \href{mailto:{{EMAIL_URL}}}{\raisebox{-0.2\height}\faEnvelope\  \underline{{{EMAIL_DISPLAY}}}} ~
-        % LINKEDIN
-        \href{{{LINKEDIN_URL}}}{\raisebox{-0.2\height}\faLinkedin\ \underline{{{LINKEDIN_DISPLAY}}}}  ~
-        % GITHUB
-        \href{{{GITHUB_URL}}}{\raisebox{-0.2\height}\faGithub\ \underline{{{GITHUB_DISPLAY}}}}
+        % CONTACT LINKS (email / linkedin / github — built conditionally)
+        {{CONTACT_LINKS}}
     \end{center}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Education  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Education}
-  \resumeSubHeadingListStart
-{{EDUCATION}}
-  \resumeSubHeadingListEnd
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Professional Summary (optional)  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{{SUMMARY}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Experience  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Work Experience}
@@ -105,11 +98,17 @@
 {{EXPERIENCE}}
   \resumeSubHeadingListEnd
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  PROJECTS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Personal Projects}
-\resumeSubHeadingListStart
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Projects (optional section, built by renderer)  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 {{PROJECTS}}
-\resumeSubHeadingListEnd
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Education  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Education}
+  \resumeSubHeadingListStart
+{{EDUCATION}}
+  \resumeSubHeadingListEnd
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Certifications (optional section, built by renderer)  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{{CERTIFICATIONS}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%  Technical Skills  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Technical Skills}

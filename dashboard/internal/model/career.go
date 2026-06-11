@@ -17,8 +17,8 @@ type CareerApplication struct {
 	// Derived from Notes free-text (see data.deriveNoteFields)
 	Location    string  // "City, ST" when a US city+state appears in the notes
 	WorkMode    string  // "Remote" | "Hybrid" | "Full" (onsite), "" when unknown
-	PayRange    string  // first $-range found in the notes, e.g. "$140-210K"
-	PayMax      float64 // top of PayRange in dollars (sort key), 0 when unknown
+	PayRange    string  // first currency range found in the notes, e.g. "$140-210K", "£103.9-124.5K"
+	PayMax      float64 // top of PayRange as a number (sort key), 0 when unknown
 	PaySource   string  // "POSTED" when the JD listed it, "est" for estimates, "" unknown
 	LastContact string  // max YYYY-MM-DD found in notes (falls back to applied date)
 	// Enrichment (lazy loaded from report)

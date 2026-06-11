@@ -75,7 +75,45 @@ function buildExperience(entries) {
   return blocks.join('\n\n');
 }
 
-function buildProjects(entries) {
+// Renders the contact links row (email / linkedin / github). Each link is
+// included only when its URL is present, so a candidate with no GitHub does not
+// get a dangling, empty GitHub icon in the header.
+function buildContactLinks(payload) {
+  const parts = [];
+
+  const emailUrl = sanitizeUrl(payload.email?.url || '');
+  if (emailUrl) {
+    const emailDisplay = payload.email?.display || payload.email?.url || '';
+    parts.push(`\\href{${emailUrl}}{\\raisebox{-0.2\\height}\\faEnvelope\\  \\underline{${escapeLatex(emailDisplay)}}}`);
+  }
+
+  const linkedinUrl = sanitizeUrl(payload.linkedin?.url || '');
+  if (linkedinUrl) {
+    const linkedinDisplay = payload.linkedin?.display || '';
+    parts.push(`\\href{${linkedinUrl}}{\\raisebox{-0.2\\height}\\faLinkedin\\ \\underline{${escapeLatex(linkedinDisplay)}}}`);
+  }
+
+  const githubUrl = sanitizeUrl(payload.github?.url || '');
+  if (githubUrl) {
+    const githubDisplay = payload.github?.display || '';
+    parts.push(`\\href{${githubUrl}}{\\raisebox{-0.2\\height}\\faGithub\\ \\underline{${escapeLatex(githubDisplay)}}}`);
+  }
+
+  return parts.join(' ~\n        ');
+}
+
+// Renders an optional Professional Summary section. Returns '' when absent so the
+// section disappears entirely (no empty heading). Senior profiles lead with this.
+function buildSummary(summary) {
+  if (typeof summary !== 'string' || !summary.trim()) return '';
+  return `\\section{Professional Summary}\n  \\vspace{2pt}\n  {\\small ${escapeLatex(summary.trim())}}\n  \\vspace{-4pt}`;
+}
+
+// Renders an optional Projects section, including its own \section wrapper.
+// Returns '' when there are no projects (the section vanishes — a senior
+// candidate need not invent "personal projects"). The heading defaults to
+// "Projects" but can be overridden (e.g. "Selected Engagements").
+function buildProjects(entries, sectionTitle = 'Projects') {
   if (!Array.isArray(entries) || entries.length === 0) return '';
   const blocks = [];
   for (const e of entries) {
@@ -84,7 +122,28 @@ function buildProjects(entries) {
     const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n') : '';
     blocks.push(`    \\resumeProjectHeading\n      {\\textbf{${escapeLatex(e.name)}}${context}}{${escapeLatex(e.dates)}}\n      \\resumeItemListStart\n${bullets}\n      \\resumeItemListEnd`);
   }
-  return blocks.join('\n\n');
+  const body = blocks.join('\n\n');
+  return `\\section{${escapeLatex(sectionTitle)}}\n\\resumeSubHeadingListStart\n${body}\n\\resumeSubHeadingListEnd`;
+}
+
+// Renders an optional standalone Certifications section, including its own
+// \section wrapper. Returns '' when there are no certifications so the section
+// disappears entirely (no empty heading) — same pattern as Projects. Entries may
+// be plain strings ("Okta Certified Professional") or objects { name, year };
+// when a year is present it is appended in parentheses. Rendered as a compact
+// comma-separated block (dense, ATS-clean) to match the Technical Skills style.
+function buildCertifications(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return '';
+  const items = entries.map(e => {
+    if (!e) return '';
+    if (typeof e === 'string') return escapeLatex(e);
+    const name = escapeLatex(e.name || '');
+    if (!name) return '';
+    const year = e.year ? ` (${escapeLatex(String(e.year))})` : '';
+    return `${name}${year}`;
+  }).filter(Boolean);
+  if (items.length === 0) return '';
+  return `\\section{Certifications}\n\\vspace{-7pt}\n\\begin{itemize}[leftmargin=0.15in, label={}]\\small{\\item{\n${items.join(', ')}\n}}\n\\end{itemize}`;
 }
 
 function buildSkills(categories) {
@@ -143,25 +202,15 @@ async function main() {
 
   let template = await readFile(TEMPLATE_PATH, 'utf-8');
 
-  const emailUrl = sanitizeUrl(payload.email?.url || '');
-  const emailDisplay = payload.email?.display || emailUrl;
-  const linkedinUrl = sanitizeUrl(payload.linkedin?.url || '');
-  const linkedinDisplay = payload.linkedin?.display || '';
-  const githubUrl = sanitizeUrl(payload.github?.url || '');
-  const githubDisplay = payload.github?.display || '';
-
   const substitutions = {
     NAME: escapeLatex(payload.name || ''),
     CONTACT_LINE: escapeLatex(payload.contact_line || ''),
-    EMAIL_URL: emailUrl,
-    EMAIL_DISPLAY: escapeLatex(emailDisplay),
-    LINKEDIN_URL: linkedinUrl,
-    LINKEDIN_DISPLAY: escapeLatex(linkedinDisplay),
-    GITHUB_URL: githubUrl,
-    GITHUB_DISPLAY: escapeLatex(githubDisplay),
+    CONTACT_LINKS: buildContactLinks(payload),
+    SUMMARY: buildSummary(payload.summary),
     EDUCATION: buildEducation(payload.education),
     EXPERIENCE: buildExperience(payload.experience),
-    PROJECTS: buildProjects(payload.projects),
+    PROJECTS: buildProjects(payload.projects, payload.projects_section_title || 'Projects'),
+    CERTIFICATIONS: buildCertifications(payload.certifications),
     SKILLS: buildSkills(payload.skills),
   };
 
@@ -193,6 +242,7 @@ async function main() {
       educationEntries: (payload.education || []).length,
       experienceEntries: (payload.experience || []).length,
       projectEntries: (payload.projects || []).length,
+      certificationEntries: (payload.certifications || []).length,
       skillCategories: (payload.skills || []).length,
       totalBullets: (() => {
         const ex = Array.isArray(payload.experience) ? payload.experience.flatMap(e => Array.isArray(e?.bullets) ? e.bullets : []) : [];
@@ -211,6 +261,7 @@ async function runSelfTest() {
   const sample = {
     name: 'Test Candidate',
     contact_line: 'City, State | +1 234 567 8900',
+    summary: 'Test summary line proving the optional Professional Summary section renders.',
     email: { url: 'test@example.com', display: 'test@example.com' },
     linkedin: { url: 'https://linkedin.com/in/test', display: 'linkedin.com/in/test' },
     github: { url: 'https://github.com/test', display: 'github.com/test' },
@@ -239,6 +290,10 @@ async function runSelfTest() {
         'Built a REST API with automated test coverage exceeding 90%',
       ],
     }],
+    certifications: [
+      'Okta Certified Professional',
+      { name: 'AWS Certified Solutions Architect - Associate', year: '2023' },
+    ],
     skills: [
       { category: 'Languages', items: 'Python, JavaScript, TypeScript' },
       { category: 'Frameworks', items: 'FastAPI, React, PyTorch' },
@@ -260,25 +315,15 @@ async function runSelfTest() {
 
   let template = await readFile(TEMPLATE_PATH, 'utf-8');
 
-  const emailUrl = sanitizeUrl(sample.email?.url || '');
-  const emailDisplay = sample.email?.display || emailUrl;
-  const linkedinUrl = sanitizeUrl(sample.linkedin?.url || '');
-  const linkedinDisplay = sample.linkedin?.display || '';
-  const githubUrl = sanitizeUrl(sample.github?.url || '');
-  const githubDisplay = sample.github?.display || '';
-
   const substitutions = {
     NAME: escapeLatex(sample.name),
     CONTACT_LINE: escapeLatex(sample.contact_line),
-    EMAIL_URL: emailUrl,
-    EMAIL_DISPLAY: escapeLatex(emailDisplay),
-    LINKEDIN_URL: linkedinUrl,
-    LINKEDIN_DISPLAY: escapeLatex(linkedinDisplay),
-    GITHUB_URL: githubUrl,
-    GITHUB_DISPLAY: escapeLatex(githubDisplay),
+    CONTACT_LINKS: buildContactLinks(sample),
+    SUMMARY: buildSummary(sample.summary),
     EDUCATION: buildEducation(sample.education),
     EXPERIENCE: buildExperience(sample.experience),
-    PROJECTS: buildProjects(sample.projects),
+    PROJECTS: buildProjects(sample.projects, sample.projects_section_title || 'Projects'),
+    CERTIFICATIONS: buildCertifications(sample.certifications),
     SKILLS: buildSkills(sample.skills),
   };
 
@@ -312,6 +357,7 @@ async function runSelfTest() {
       educationEntries: sample.education.length,
       experienceEntries: sample.experience.length,
       projectEntries: sample.projects.length,
+      certificationEntries: sample.certifications.length,
       skillCategories: sample.skills.length,
       totalBullets: (() => {
         const ex = Array.isArray(sample.experience) ? sample.experience.flatMap(e => Array.isArray(e?.bullets) ? e.bullets : []) : [];

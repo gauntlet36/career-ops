@@ -239,9 +239,24 @@ Availability + any gap acknowledgments the user chose to include (Step 5).
 Only if user confirmed inclusion in Step 5. Written in that language. Italic in PDF.
 ```
 
+**Reviewer pass (before showing the draft):** Run the Reviewer Pass from `_shared.md` on the full letter draft. The reviewer checks against the forward-looking framing (does each paragraph talk about their future or your past?), the language rules, and the interview backtrack test. Apply Part A edits and weigh Part B suggestions, then present the *revised* draft to the user. When you present it, name the 2-3 most impactful changes the review produced.
+
 End the draft with: "How does this read? Once you approve I'll generate the PDF."
 
 **Do NOT generate any PDF until the user explicitly approves.** Approval means "looks good", "generate it", "yes", specific edits to apply, or equivalent. A question or silence is not approval.
+
+---
+
+## Forward-looking framing (the cover letter is NOT a CV repetition)
+
+A cover letter that restates the CV wastes the reader's time — they already have the CV. The letter's job is to be **forward-looking**: it tells the employer what you will do for them.
+
+- **Lead with the tasks you can solve for them**, not a recap of what you've done. Frame each body paragraph around one of *their* problems and how you'd approach it.
+- **Describe your approach** — the methods, tools, and judgment you bring to the role on day one.
+- **Use past achievements only as evidence** for a forward-looking claim, never as the point itself. One or two brief examples per claim, no more.
+- The "Problems I will solve" section (Step 8) is where this lives most explicitly — but the whole letter should read as "here is the value you can expect from hiring me," not "here is my history."
+
+Test each paragraph: does it talk about *their* future or *your* past? If it's all past, rewrite it to connect to what you'd do for them.
 
 ---
 

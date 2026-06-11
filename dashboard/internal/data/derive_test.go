@@ -95,6 +95,53 @@ func TestDeriveNoteFields(t *testing.T) {
 			last:     "2026-06-01",
 		},
 		{
+			name: "GBP posted range (UK roles)",
+			app: model.CareerApplication{
+				Date:  "2026-06-11",
+				Notes: "Remote UK. Base £103.9-124.5K (POSTED). Strong SA/PS fit",
+			},
+			workMode: "Remote",
+			payRange: "£103.9-124.5K",
+			paySrc:   "POSTED",
+			last:     "2026-06-11",
+		},
+		{
+			name: "UK city-country location with remote mode and GBP",
+			app: model.CareerApplication{
+				Date:  "2026-06-11",
+				Notes: "London, UK (Remote). £103.9-124.5K (POSTED). Strong SA/PS fit",
+			},
+			location: "London, UK",
+			workMode: "Remote",
+			payRange: "£103.9-124.5K",
+			paySrc:   "POSTED",
+			last:     "2026-06-11",
+		},
+		{
+			name: "role title ending in region does not false-match location",
+			app: model.CareerApplication{
+				Date:  "2026-06-11",
+				Role:  "Senior Solution Architect, EMEA",
+				Notes: "Comp €90-120K (est)",
+			},
+			location: "",
+			workMode: "",
+			payRange: "€90-120K",
+			paySrc:   "est",
+			last:     "2026-06-11",
+		},
+		{
+			name: "EUR estimate range",
+			app: model.CareerApplication{
+				Date:  "2026-06-11",
+				Notes: "Berlin (Hybrid). Comp ~€90-120K (est)",
+			},
+			workMode: "Hybrid",
+			payRange: "~€90-120K",
+			paySrc:   "est",
+			last:     "2026-06-11",
+		},
+		{
 			name: "no false-positive city from prose",
 			app: model.CareerApplication{
 				Date:  "2026-06-01",
@@ -138,6 +185,8 @@ func TestPayCeiling(t *testing.T) {
 		"~$124.2-198.7K":   198_700,
 		"$170K":            170_000,
 		"$95-159K":         159_000,
+		"£103.9-124.5K":    124_500,
+		"~€90-120K":        120_000,
 		"":                 0,
 	}
 	for span, want := range cases {

@@ -279,9 +279,23 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Status: `Evaluated`
 - PDF: ❌ (or ✅ if auto-pipeline generated PDF)
 - Report: root-relative link `[001](reports/001-company-2026-01-01.md)` (when merged via `merge-tracker.mjs` it is normalized to be relative to the tracker's own dir, e.g. `../reports/...`; see #760)
+- Notes: follow the **Notes column convention** below so the dashboard can populate its Location / Pay / Last-contact columns
 
 **Tracker format:**
 
 ```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
 ```
+
+**Notes column convention (IMPORTANT — the dashboard parses structure out of this free-text):**
+
+Write the note in this order: `{Location} ({WorkMode}). {pay} ({POSTED|est}). {one-line summary}`
+
+- **Location** — `City, ST` for US roles or `City, Country` for the rest (e.g. `London, UK`, `Berlin, Germany`). The dashboard recognizes both. For fully-remote roles, use the candidate's base city/region from `config/profile.yml`.
+- **WorkMode** — one of `Remote` / `Hybrid` / `Onsite`.
+- **pay** — the JD's own currency symbol and range: `£104-125K`, `$150-220K`, `€90-120K`. Append `(POSTED)` when the JD listed the figure, or `(est)` when you estimated it. Omit the pay segment only when truly unknown.
+- **summary** — a short fit/gap note.
+
+Example: `London, UK (Remote). £104-125K (POSTED). Strong SA/PS fit; observability domain gap`
+
+This applies whether you edit the tracker directly or write a TSV addition (the note is the 9th TSV column).

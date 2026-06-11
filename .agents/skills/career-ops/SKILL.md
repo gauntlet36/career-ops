@@ -3,7 +3,7 @@ name: career-ops
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | latex | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | update]"
+argument-hint: "[scan | deep | pdf | latex | cover | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | interview | patterns | followup | upskill | expand | update]"
 license: MIT
 ---
 
@@ -34,6 +34,8 @@ Determine the mode from `$mode`:
 | `batch` | `batch` |
 | `patterns` | `patterns` |
 | `followup` | `followup` |
+| `upskill` | `upskill` |
+| `expand` | `expand` |
 | `update` | `update` |
 | `cover` | `cover` |
 
@@ -70,6 +72,8 @@ Available commands:
   /career-ops batch     → Batch processing with parallel workers
   /career-ops patterns  → Analyze rejection patterns and improve targeting
   /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
+  /career-ops upskill   → Skill-gap analysis + learning plan (aggregate tracker or single JD)
+  /career-ops expand    → Enrich profile from documents, GitHub, LinkedIn, portfolio
   /career-ops update    → Update career-ops system files with diff preview + compat check
 
 Inbox: add URLs to data/pipeline.md → /career-ops pipeline
@@ -85,12 +89,14 @@ After determining the mode, load the necessary files before executing:
 ### Modes that require `_shared.md` + their mode file:
 Read `modes/_shared.md` + `modes/{mode}.md`
 
-Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `latex`, `cover`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+
+(`pdf`, `latex`, and `cover` load `_shared.md` for the Reviewer Pass and writing rules.)
 
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
 
-Applies to: `tracker`, `deep`, `interview-prep`, `interview`, `latex`, `training`, `project`, `patterns`, `followup`, `cover`
+Applies to: `tracker`, `deep`, `interview-prep`, `interview`, `latex`, `training`, `project`, `patterns`, `followup`, `cover`, `upskill`, `expand`
 
 ### Modes delegated to subagent:
 For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.

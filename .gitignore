@@ -1,5 +1,6 @@
 # Personal data (user fills these)
 cv.md
+cv.backup-*.md
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
@@ -8,7 +9,12 @@ data/parser-output/**/*.json
 !data/parser-output/**/.gitkeep
 data/cache/ats-companies/
 reports/*.md
+reports/**/*.md
 !reports/.gitkeep
+
+# Compiled binaries / backups
+*.exe
+*.exe~
 output/*
 !output/.gitkeep
 batch/logs/*
@@ -53,6 +59,7 @@ reports/*-RESERVED.md
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+career-dashboard.exe
 package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local — never commit)
